@@ -34,6 +34,13 @@ jobs:
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
       - name: Login to GitLab Registry
         uses: docker/login-action@v1
         with:
@@ -59,6 +66,8 @@ jobs:
           context: .
           file: ./src/${{ matrix.cfg.context }}/Dockerfile
           load: true
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
           build-args: |
             linux_install_script_url=${{ github.event.inputs.linux_install_script_url }}
           tags: |
