@@ -17,6 +17,15 @@ function docker_tags()
 {
     for _tag in ${TAGS}
     do
-        docker tag  ${IMAGE_NAME}:${_tag}
+        docker tag ${SOURCE_IMAGE} ${IMAGE_NAME}:${_tag}
+    done
+}
+
+
+function docker_push_tags()
+{
+    for _tag in ${TAGS}
+    do
+        docker push ${SOURCE_IMAGE} ${IMAGE_NAME}:${_tag}
     done
 }

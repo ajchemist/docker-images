@@ -9,9 +9,9 @@ on:
         required: true
         default: 'https://download.clojure.org/install/linux-install-1.10.2.774.sh'
       tags:
-        description: 'whitespace separated'
+        description: 'Tags (whitespace separated)'
       graalvm_ce_tags:
-        description: 'whitespace separated'
+        description: 'GraalVM CE variant tags (whitespace separated)'
         default: "21.0.0 21.0.0-clojure-1.10.2"
 
 
@@ -52,7 +52,7 @@ jobs:
         with:
           context: .
           file: ./src/${{ matrix.cfg.context }}/Dockerfile
-          push: true
+          load: true
           build-args: |
             linux_install_script_url=${{ github.event.inputs.linux_install_script_url }}
           tags: |
@@ -67,5 +67,8 @@ jobs:
       - name: Docker image tagging
         env:
           SOURCE_IMAGE: ${{ env.IMAGE_NAME }}:${{ github.sha }}-${{ github.run_id }}
+          TAGS: ${{ matrix.cfg.tags }}
         run: |
           . ./src/fns/docker.sh
+          docker_tags
+          docker push $IMAGE_NAME
