@@ -12,6 +12,7 @@ on:
         description: 'whitespace separated'
       graalvm_ce_tags:
         description: 'whitespace separated'
+        default: "21.0.0 21.0.0-clojure-1.10.2"
 
 
 jobs:
@@ -55,9 +56,16 @@ jobs:
           build-args: |
             linux_install_script_url=${{ github.event.inputs.linux_install_script_url }}
           tags: |
-            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}-${{ github.run_id }}
             ${{ env.IMAGE_NAME }}:${{ matrix.cfg.variant }}
 
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
+
+
+      - name: Docker image tagging
+        env:
+          SOURCE_IMAGE: ${{ env.IMAGE_NAME }}:${{ github.sha }}-${{ github.run_id }}
+        run: |
+          . ./src/fns/docker.sh
