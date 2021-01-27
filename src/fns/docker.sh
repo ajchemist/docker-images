@@ -15,6 +15,14 @@ function docker_build()
 
 function docker_tags()
 {
+    #
+    for _tag in ${TAGS_AFTER_VARIANT}
+    do
+        docker tag ${SOURCE_IMAGE} ${IMAGE_NAME}:${VARIANT}${_tag:+-$_tag}
+    done
+
+
+    #
     for _tag in ${TAGS}
     do
         docker tag ${SOURCE_IMAGE} ${IMAGE_NAME}:${_tag}

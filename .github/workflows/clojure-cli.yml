@@ -8,11 +8,17 @@ on:
         description: 'LINUX_INSTALL_SCRIPT_URL'
         required: true
         default: 'https://download.clojure.org/install/linux-install-1.10.2.774.sh'
+      clojure_version:
+        description: 'Clojure version'
+        default: '1.10.2'
+      clojure_version_tags:
+        description: 'Clojure version tags'
+        default: '1.10 1.10.2 1.10.2.774'
       tags:
         description: 'Tags (whitespace separated)'
-      graalvm_ce_tags:
+      graalvm_ce_tags_after_variant:
         description: 'GraalVM CE variant tags (whitespace separated)'
-        default: "21.0.0 21.0.0-clojure-1.10.2"
+        default: "21.0.0 21.0.0-clojure-1.10.2 21.0.0-clojure-1.10.2.774"
 
 
 jobs:
@@ -23,7 +29,7 @@ jobs:
     strategy:
       matrix:
         cfg:
-          - { context: clojure-cli/graalvm-ce, variant: graalvm-ce, tags: "${{ github.event.inputs.graalvm_ce_tags }}" }
+          - { context: clojure-cli/graalvm-ce, variant: graalvm-ce, tags: '${{ github.event.inputs.clojure_version_tags }} ${{ github.event.inputs.tags }}', tags_after_variant: '${{ github.event.inputs.graalvm_ce_tags_after_variant }}' }
     name: Context ${{ matrix.cfg.context }}
     steps:
       - name: Set up Docker Buildx
@@ -56,8 +62,8 @@ jobs:
           build-args: |
             linux_install_script_url=${{ github.event.inputs.linux_install_script_url }}
           tags: |
-            ${{ env.IMAGE_NAME }}:${{ github.sha }}-${{ github.run_id }}
             ${{ env.IMAGE_NAME }}:${{ matrix.cfg.variant }}
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}-${{ github.run_id }}
 
 
       - name: Image digest
@@ -66,8 +72,10 @@ jobs:
 
       - name: Docker image tagging
         env:
-          SOURCE_IMAGE: ${{ env.IMAGE_NAME }}:${{ github.sha }}-${{ github.run_id }}
+          SOURCE_IMAGE: ${{ env.IMAGE_NAME }}:${{ matrix.cfg.variant }}
+          VARIANT: ${{ matrix.cfg.variant }}
           TAGS: ${{ matrix.cfg.tags }}
+          TAGS_AFTER_VARIANT: ${{ matrix.cfg.tags_after_variant }}
         run: |
           . ./src/fns/docker.sh
           docker_tags
