@@ -1,0 +1,73 @@
+name: alpine
+
+
+on:
+  workflow_dispatch:
+    inputs:
+      tags:
+        description: 'Tags (whitespace separated)'
+
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: ajchemist/alpine
+    strategy:
+      matrix:
+        cfg:
+          - { context: alpine/3.13/openssh, variant: 3.13-openssh, tags: '${{ github.event.inputs.tags }}' }
+    name: Context ${{ matrix.cfg.context }}
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+      - name: Login to GitLab Registry
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+
+      - uses: actions/checkout@v2
+
+
+      - name: Github inputs
+        run: |
+          echo "Tags: ${{ matrix.cfg.tags }}"
+          echo "SHA: ${{ github.sha }}"
+
+
+      - name: Docker build and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          context: ./src/${{ matrix.cfg.context }}
+          file: ./src/${{ matrix.cfg.context }}/Dockerfile
+          load: true
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ matrix.cfg.variant }}
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}-${{ github.run_id }}
+
+
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
+
+
+      - name: Docker image tagging
+        env:
+          SOURCE_IMAGE: ${{ env.IMAGE_NAME }}:${{ matrix.cfg.variant }}
+          VARIANT: ${{ matrix.cfg.variant }}
+          TAGS: ${{ matrix.cfg.tags }}
+        run: |
+          . ./src/fns/docker.sh
+          docker_tags
+          docker push $IMAGE_NAME
