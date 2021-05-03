@@ -13,13 +13,19 @@ function docker_build()
 }
 
 
+# https://unix.stackexchange.com/questions/146942/how-can-i-test-if-a-variable-is-empty-or-contains-only-spaces
 function docker_tags()
 {
     #
-    for _tag in ${TAGS_AFTER_VARIANT}
-    do
-        docker tag ${SOURCE_IMAGE} ${IMAGE_NAME}:${VARIANT}${_tag:+-$_tag}
-    done
+    if [ -z "${TAGS_AFTER_VARIANT// }" ];
+    then
+        docker tag ${SOURCE_IMAGE} ${IMAGE_NAME}:${VARIANT}
+    else
+        for _tag in ${TAGS_AFTER_VARIANT}
+        do
+            docker tag ${SOURCE_IMAGE} ${IMAGE_NAME}:${VARIANT}${_tag:+-$_tag}
+        done
+    fi
 
 
     #
