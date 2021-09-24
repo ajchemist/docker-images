@@ -1,10 +1,9 @@
-name: emacs
+name: emacs-org-mind-map
 
 
 on:
   workflow_dispatch:
     inputs:
-
 
 env:
   image-name: ajchemist/emacs
@@ -16,7 +15,7 @@ jobs:
     strategy:
       matrix:
         cfg:
-          - { context: emacs/27.2, variant: 27.2, tags: '${{ github.event.inputs.tags }}' }
+          - { context: emacs/27.2-org-mind-map, variant: 27.2-org-mind-map, tags: '${{ github.event.inputs.tags }}' }
     name: Context ${{ matrix.cfg.context }}
     steps:
       - name: Set up Docker Buildx
