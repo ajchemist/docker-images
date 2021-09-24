@@ -4,20 +4,24 @@ name: emacs
 on:
   workflow_dispatch:
     inputs:
-      tags:
-        description: 'Tags (whitespace separated)'
+      org-mind-map:
+        description: 'org-mind-map image build boolean'
+        default: 'false'
+
+env:
+  image-name: ajchemist/emacs
 
 
 jobs:
   build-push:
     runs-on: ubuntu-latest
-    env:
-      IMAGE_NAME: ajchemist/emacs
     strategy:
       matrix:
         cfg:
           - { context: emacs/27.2, variant: 27.2, tags: '${{ github.event.inputs.tags }}' }
+          - { context: emacs/27.2-org-mind-map, variant: 27.2-org-mind-map, tags: '${{ github.event.inputs.tags }}' }
     name: Context ${{ matrix.cfg.context }}
+    if: "!(contains(matrix.cfg.context, 'org-mind-map') && contains(github.event.inputs.org-mind-map, 'true'))"
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
@@ -56,8 +60,8 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
           tags: |
-            ${{ env.IMAGE_NAME }}:${{ matrix.cfg.variant }}
-            ${{ env.IMAGE_NAME }}:${{ github.sha }}-${{ github.run_id }}
+            ${{ env.image-name }}:${{ matrix.cfg.variant }}
+            ${{ env.image-name }}:${{ github.sha }}-${{ github.run_id }}
 
 
       - name: Image digest
@@ -66,11 +70,11 @@ jobs:
 
       - name: Docker image tagging
         env:
-          SOURCE_IMAGE: ${{ env.IMAGE_NAME }}:${{ matrix.cfg.variant }}
+          SOURCE_IMAGE: ${{ env.image-name }}:${{ matrix.cfg.variant }}
           VARIANT: ${{ matrix.cfg.variant }}
           TAGS: ${{ matrix.cfg.tags }}
           TAGS_AFTER_VARIANT: ${{ matrix.cfg.tags_after_variant }}
         run: |
           . ./src/fns/docker.sh
           docker_tags
-          docker push --all-tags $IMAGE_NAME
+          docker push --all-tags ${{ env.image-name }}
