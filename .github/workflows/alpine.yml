@@ -17,6 +17,7 @@ jobs:
       matrix:
         cfg:
           - { context: alpine/3.13/openssh, variant: 3.13-openssh, tags: '${{ github.event.inputs.tags }}' }
+          - { context: alpine/3.14/openssh, variant: 3.14-openssh, tags: '${{ github.event.inputs.tags }}' }
     name: Context ${{ matrix.cfg.context }}
     steps:
       - name: Set up Docker Buildx
