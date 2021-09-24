@@ -17,6 +17,7 @@ function docker_build()
 function docker_tags()
 {
     #
+    local IMAGE_NAME=${1:-$IMAGE_NAME}
     if [ -z "${TAGS_AFTER_VARIANT// }" ];
     then
         docker tag ${SOURCE_IMAGE} ${IMAGE_NAME}:${VARIANT}
@@ -38,6 +39,7 @@ function docker_tags()
 
 function docker_push_tags()
 {
+    local IMAGE_NAME=${1:-$IMAGE_NAME}
     for _tag in ${TAGS}
     do
         docker push ${SOURCE_IMAGE} ${IMAGE_NAME}:${_tag}

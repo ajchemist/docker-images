@@ -66,11 +66,11 @@ jobs:
 
       - name: Docker image tagging
         env:
-          SOURCE_IMAGE: ${{ env.image-name }}:${{ matrix.cfg.variant }}
+          IMAGE_NAME: ${{ env.image-name }}
+          SOURCE_IMAGE: "${{ env.image-name }}:${{ matrix.cfg.variant }}"
           VARIANT: ${{ matrix.cfg.variant }}
           TAGS: ${{ matrix.cfg.tags }}
           TAGS_AFTER_VARIANT: ${{ matrix.cfg.tags_after_variant }}
         run: |
           . ./src/fns/docker.sh
-          docker_tags
           docker push --all-tags ${{ env.image-name }}

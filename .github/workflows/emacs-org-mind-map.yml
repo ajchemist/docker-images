@@ -65,6 +65,7 @@ jobs:
 
       - name: Docker image tagging
         env:
+          IMAGE_NAME: ${{ env.image-name }}
           SOURCE_IMAGE: ${{ env.image-name }}:${{ matrix.cfg.variant }}
           VARIANT: ${{ matrix.cfg.variant }}
           TAGS: ${{ matrix.cfg.tags }}
