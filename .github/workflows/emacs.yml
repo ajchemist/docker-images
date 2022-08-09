@@ -18,6 +18,7 @@ jobs:
         cfg:
           - { context: emacs/27.2, variant: 27.2, tags: '${{ github.event.inputs.tags }}' }
           - { context: emacs/28.1/alpine, variant: 28.1-alpine, tags: '${{ github.event.inputs.tags }}' }
+          - { context: emacs/28.1/ubuntu, variant: 28.1-ubuntu, tags: '${{ github.event.inputs.tags }}' }
     name: Context ${{ matrix.cfg.context }}
     steps:
       - name: Set up Docker Buildx
