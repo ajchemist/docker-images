@@ -1,4 +1,4 @@
-FROM ghcr.io/graalvm/graalvm-ce:ol8-java11-21.0.0
+FROM ghcr.io/graalvm/graalvm-ce:ol8-java11-22.3.0
 
 
 LABEL maintainer "ajchemist <1694505+ajchemist@users.noreply.github.com>"
