@@ -1,0 +1,94 @@
+name: Clojure-Cli (Zulu OpenJDK Alpine)
+
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/clojure-cli--zulu-openjdk-alpine.yml'
+      - 'src/clojure-cli/zulu-openjdk-alpine/**/*'
+    branches:
+      - main
+
+
+env:
+  registry: ghcr.io
+  linux_install_script_url: 'https://download.clojure.org/install/posix-install-1.11.1.1208.sh'
+  image_name: ajchemist/clojure-cli/zulu-openjdk-alpine
+
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        cfg:
+          - { context: clojure-cli/zulu-openjdk-alpine/19-jre-headless, variant: '19-jre-headless' }
+    name: Context ${{ matrix.cfg.context }}
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+
+      - name: Login to Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.registry }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: |
+            ${{ env.registry }}/${{ env.image_name }}
+          tags: |
+            type=ref,event=branch
+            type=sha,format=long
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
+            type=raw,value=1.11
+            type=raw,value=1.11.1
+            type=raw,value=1.11.1.1208
+            type=match,pattern=\d+,group=0,value=${{ matrix.cfg.variant }}
+            type=match,pattern=\d+-.*,group=0,value=${{ matrix.cfg.variant }}
+
+
+      - uses: actions/checkout@v3
+
+
+      - name: Docker build and push
+        id: docker_build
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./src/${{ matrix.cfg.context }}/Dockerfile
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          build-args: |
+            linux_install_script_url=${{ env.linux_install_script_url }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: |
+            linux/amd64
+            linux/arm64
+          push: true
+
+
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
+
+
+      - name: Discord action job digest notification
+        uses: sarisia/actions-status-discord@v1
+        if: always() # Pick up events even if the job fails or is canceled.
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
