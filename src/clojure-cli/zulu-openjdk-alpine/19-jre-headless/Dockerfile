@@ -22,4 +22,13 @@ RUN curl -o linux-install.sh $linux_install_script_url \
 RUN apk del curl
 
 
+RUN adduser -D -g worker worker \
+    && mkdir -p /app \
+    && chown -R worker /app
+
+
+USER worker:worker
+WORKDIR /app
+
+
 ENTRYPOINT ["clojure"]
